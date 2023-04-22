@@ -18,6 +18,10 @@ def parse_args(args: list[str] = None) -> argparse.Namespace:
     parser.add_argument("--val-data-path", type=str, default="data",
                         help="Path to the location of the validation data files.")
 
+    parser.add_argument("--crop-min", type=list, default=[0, 0, 0], help="Minimum index to crop images", nargs=3)
+    parser.add_argument("--crop-max", type=list, default=[256, 256, 198], help="Maximum index to crop images", nargs="+")
+
+
     parser.add_argument("--training-id", type=str, default=None,
                         help="ID for the training run. Ignored if mode != 'train'. "
                              "If not specified, the ID will be generated with the system date.")

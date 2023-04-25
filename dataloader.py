@@ -1,33 +1,41 @@
 import os
 from typing import Iterable, Optional
 
-import nibabel as nib
+import imageio
 import numpy as np
 import pandas as pd
 import tensorflow as tf
 
 def preprocess_data_batch(data_batch: Iterable):
-    # TODO: add data preprocessing
+    # TODO: add data preprocessing and augmentations (random flips, rotations, zoom, affine transforms, etc.)
     data_batch = tf.cast(np.stack(data_batch), dtype=tf.float32)
     return data_batch
 
 def preprocess_label_batch(label_batch: Iterable):
-    # TODO: add label preprocessing
+    # TODO: add label preprocessing. Not much to do here. It's already a one-hot vector at this point.
     label_batch = tf.cast(np.stack(label_batch), dtype=tf.float32)
     return label_batch
 
-class ADNIDataLoader(tf.keras.utils.Sequence):
+def one_hot(item: int, n: int):
+    ret = np.zeros(n)
+    ret[item] = 1
+    return ret
+
+class MRIDataLoader(tf.keras.utils.Sequence):
 
     def __init__(self,
                  data_path: str,
                  metadata_path: str,
                  patients: Optional[Iterable[str]] = None,
-                 batch_size: int = None,
+                 batch_size: int = 32,
                  shuffle_all: bool = True,
-                 shuffle_batch: bool = True):
+                 shuffle_batch: bool = True,
+                 verbose: bool = True):
+        super(MRIDataLoader, self).__init__()
 
         self.data_path = data_path
         self.metadata_path = metadata_path
+        self.verbose = verbose
 
         self.metadata = pd.read_csv(metadata_path)
 
@@ -46,7 +54,7 @@ class ADNIDataLoader(tf.keras.utils.Sequence):
     def __len__(self) -> int:
         return int(np.ceil(len(self.patients) / self.batch_size))
 
-    def __getitem__(self, item: int) -> tuple[np.ndarray, np.ndarray] | np.ndarray:
+    def __getitem__(self, item: int):
         if self.batch_size * (item + 1) >= len(self.patients):
             batch_patients = self.patients[self.batch_size * item:]
         else:
@@ -62,12 +70,12 @@ class ADNIDataLoader(tf.keras.utils.Sequence):
                 print(f"Loading patient {patient}.")
             patient_dir = os.path.join(self.data_path, patient)
             try:
-                data_batch.append(nib.load(patient_dir)).get_fdata()
+                data_batch.append(imageio.imread(patient_dir, pilmode="RGB"))
             except FileNotFoundError as e:
                 if self.verbose:
                     print(f"Missing file for patient {patient}: {e.filename}")
 
-            label_batch.append(self.metadata[self.metadata["Image Data ID"] == patient]["Group"].iloc[0])
+            label_batch.append(one_hot(self.metadata[self.metadata["name"] == patient]["label"].iloc[0], n=len(self.metadata["label"].unique())))
 
         data_batch = preprocess_data_batch(data_batch)
         label_batch = preprocess_label_batch(label_batch)

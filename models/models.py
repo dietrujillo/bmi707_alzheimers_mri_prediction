@@ -1,6 +1,5 @@
-from UNet import UNet
+from .ConvNet import ConvNet
 
-# TODO: define multiple models in their respective files under models/ . Then, add here.
 MODELS = {
-    "UNet": UNet
+    "ConvNet": ConvNet
 }

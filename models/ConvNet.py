@@ -41,6 +41,9 @@ class ConvBlock(tf.keras.layers.Layer):
 
 
 class ConvNet(tf.keras.Model):
+    """
+    A simple convolutional network classifier.
+    """
     def __init__(self, **kwargs):
         super(ConvNet, self).__init__(**kwargs)
         

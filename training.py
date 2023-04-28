@@ -21,7 +21,7 @@ def build_model(model_name: str,
         model_params = {}
 
     model_class = MODELS[model_name]
-
+    
     model = model_class(**model_params)
     model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
     model.build(input_shape=(None, 128, 128, 3))
@@ -31,24 +31,31 @@ def build_model(model_name: str,
 
 
 def train(namespace: Namespace) -> None:
+        
     results_dir = os.path.join(namespace.results_path, namespace.training_id)
     os.makedirs(results_dir, exist_ok=False)
 
-    early_stopping = tf.keras.callbacks.EarlyStopping(monitor="val_accuracy")
+    early_stopping = tf.keras.callbacks.EarlyStopping(monitor="val_accuracy",
+                                                      patience=namespace.early_stopping_patience, 
+                                                      restore_best_weights=True, verbose=1)
     csv_logger = tf.keras.callbacks.CSVLogger(os.path.join(results_dir, "log.csv"))
 
     callbacks = [early_stopping, csv_logger]
-
-    model = build_model("ConvNet",
+    
+    model = build_model(namespace.model_name,
                         optimizer="adam",
                         loss="categorical_crossentropy",
-                        metrics=[tf.keras.metrics.AUC(), "accuracy"])
+                        metrics=["accuracy", tf.keras.metrics.AUC()])
     
     print(f"Start training of model {namespace.training_id}.")
     
     metadata = pd.read_csv(os.path.join(namespace.data_path, "metadata.csv"))
-    X_train, X_val, _, _ = train_test_split(metadata["name"], metadata["label"], 
+    X_train, X_test, y_train, y_test = train_test_split(metadata["name"], metadata["label"], test_size=0.3,
                                             stratify=metadata["label"], random_state=namespace.random_seed)
+    X_val, X_test, y_val, y_test = train_test_split(X_test, y_test, test_size=0.33,
+                                            stratify=y_test, random_state=namespace.random_seed)
+    
+    print(len(X_train), len(X_val), len(X_test))
 
     loader = MRIDataLoader(data_path=os.path.join(namespace.data_path, "preprocessed"), metadata_path=os.path.join(namespace.data_path, "metadata.csv"),
                            patients=X_train, batch_size=256, verbose=False)
@@ -62,3 +69,5 @@ def train(namespace: Namespace) -> None:
     model.save(os.path.join(results_dir, "model.tf"), save_format="tf")
     with open(os.path.join(results_dir, "history.json"), "w") as file:
         json.dump(history.history, file, indent=4)
+    with open(os.path.join(results_dir, "args.json"), "w") as file:
+        json.dump(namespace.__dict__, file, indent=4)

@@ -2,7 +2,6 @@ import argparse
 import datetime
 
 from training import train
-from inference import run_inference
 
 from models.models import MODELS
 
@@ -10,7 +9,6 @@ from models.models import MODELS
 def parse_args(args: list[str] = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Alzheimer's state prediction with Convolutional Neural Networks.")
 
-    parser.add_argument("--mode", type=str, default="train", choices=["preprocess", "train", "inference"])
     parser.add_argument("--random-seed", type=int, default=42)
     
     parser.add_argument("--model-name", type=str, choices=MODELS.keys(), required=True,
@@ -36,7 +34,4 @@ def parse_args(args: list[str] = None) -> argparse.Namespace:
 
 if __name__ == '__main__':
     namespace = parse_args()
-    if namespace.mode == "train":
-        train(namespace)
-    elif namespace.mode == "inference":
-        run_inference(namespace)
+    train(namespace)

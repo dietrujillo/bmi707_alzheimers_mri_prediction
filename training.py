@@ -59,8 +59,12 @@ def train(namespace: Namespace) -> None:
 
     loader = MRIDataLoader(data_path=os.path.join(namespace.data_path, "preprocessed"), metadata_path=os.path.join(namespace.data_path, "metadata.csv"),
                            patients=X_train, batch_size=256, verbose=False, augment_data=True)
+    train_loader = MRIDataLoader(data_path=os.path.join(namespace.data_path, "preprocessed"), metadata_path=os.path.join(namespace.data_path, "metadata.csv"),
+                                      patients=X_train, shuffle_all=False, shuffle_batch=False, batch_size=256, verbose=False, augment_data=False)
     validation_loader = MRIDataLoader(data_path=os.path.join(namespace.data_path, "preprocessed"), metadata_path=os.path.join(namespace.data_path, "metadata.csv"),
-                                      patients=X_val, shuffle_all=False, shuffle_batch=False, batch_size=256, verbose=False)
+                                      patients=X_val, shuffle_all=False, shuffle_batch=False, batch_size=256, verbose=False, augment_data=False)
+    test_loader = MRIDataLoader(data_path=os.path.join(namespace.data_path, "preprocessed"), metadata_path=os.path.join(namespace.data_path, "metadata.csv"),
+                                      patients=X_test, shuffle_all=False, shuffle_batch=False, batch_size=256, verbose=False, augment_data=False)
 
     history = model.fit(loader, validation_data=validation_loader, epochs=namespace.epochs, callbacks=callbacks)
 
@@ -72,9 +76,14 @@ def train(namespace: Namespace) -> None:
     with open(os.path.join(results_dir, "args.json"), "w") as file:
         json.dump(namespace.__dict__, file, indent=4)
         
-    train_predictions = model.predict(MRIDataLoader(data_path=os.path.join(namespace.data_path, "preprocessed"), metadata_path=os.path.join(namespace.data_path, "metadata.csv"),
-                                                    patients=X_train, batch_size=256, verbose=False, augment_data=False, shuffle_all=False, shuffle_batch=False))
+    train_predictions = model.predict(train_loader)
+    print(type(X_train))
+    print(X_train.shape)
+    print(type(train_predictions))
+    print(train_predictions.shape)
     pd.DataFrame({"Image": X_train, "prediction": train_predictions}).to_csv(os.path.join(results_dir, "train_predictions.csv"), index=False)    
     
     validation_predictions = model.predict(validation_loader)
     pd.DataFrame({"Image": X_val, "prediction": validation_predictions}).to_csv(os.path.join(results_dir, "validation_predictions.csv"), index=False)    
+
+    test_predictions = model.predict(test_loader)

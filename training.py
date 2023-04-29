@@ -58,7 +58,7 @@ def train(namespace: Namespace) -> None:
     print(len(X_train), len(X_val), len(X_test))
 
     loader = MRIDataLoader(data_path=os.path.join(namespace.data_path, "preprocessed"), metadata_path=os.path.join(namespace.data_path, "metadata.csv"),
-                           patients=X_train, batch_size=256, verbose=False)
+                           patients=X_train, batch_size=256, verbose=False, augment_data=True)
     validation_loader = MRIDataLoader(data_path=os.path.join(namespace.data_path, "preprocessed"), metadata_path=os.path.join(namespace.data_path, "metadata.csv"),
                                       patients=X_val, shuffle_all=False, shuffle_batch=False, batch_size=256, verbose=False)
 
@@ -71,3 +71,10 @@ def train(namespace: Namespace) -> None:
         json.dump(history.history, file, indent=4)
     with open(os.path.join(results_dir, "args.json"), "w") as file:
         json.dump(namespace.__dict__, file, indent=4)
+        
+    train_predictions = model.predict(MRIDataLoader(data_path=os.path.join(namespace.data_path, "preprocessed"), metadata_path=os.path.join(namespace.data_path, "metadata.csv"),
+                                                    patients=X_train, batch_size=256, verbose=False, augment_data=False, shuffle_all=False, shuffle_batch=False))
+    pd.DataFrame({"Image": X_train, "prediction": train_predictions}).to_csv(os.path.join(results_dir, "train_predictions.csv"), index=False)    
+    
+    validation_predictions = model.predict(validation_loader)
+    pd.DataFrame({"Image": X_val, "prediction": validation_predictions}).to_csv(os.path.join(results_dir, "validation_predictions.csv"), index=False)    

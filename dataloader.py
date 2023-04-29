@@ -6,16 +6,6 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 
-def preprocess_data_batch(data_batch: Iterable):
-    # TODO: add data preprocessing and augmentations (random flips, rotations, zoom, affine transforms, etc.)
-    data_batch = tf.cast(np.stack(data_batch), dtype=tf.float32)
-    return data_batch
-
-def preprocess_label_batch(label_batch: Iterable):
-    # TODO: add label preprocessing. Not much to do here. It's already a one-hot vector at this point.
-    label_batch = tf.cast(np.stack(label_batch), dtype=tf.float32)
-    return label_batch
-
 def one_hot(item: int, n: int):
     ret = np.zeros(n)
     ret[item] = 1
@@ -30,12 +20,14 @@ class MRIDataLoader(tf.keras.utils.Sequence):
                  batch_size: int = 32,
                  shuffle_all: bool = True,
                  shuffle_batch: bool = True,
-                 verbose: bool = True):
+                 verbose: bool = True,
+                 augment_data: bool = False):
         super(MRIDataLoader, self).__init__()
 
         self.data_path = data_path
         self.metadata_path = metadata_path
         self.verbose = verbose
+        self.augment_data = augment_data
 
         self.metadata = pd.read_csv(metadata_path)
 
@@ -53,6 +45,17 @@ class MRIDataLoader(tf.keras.utils.Sequence):
 
     def __len__(self) -> int:
         return int(np.ceil(len(self.patients) / self.batch_size))
+    
+    def preprocess_data_batch(self, data_batch: Iterable):
+        # TODO: add data preprocessing and augmentations (random flips, rotations, zoom, affine transforms, etc.)
+        if self.augment_data:
+            pass
+        data_batch = tf.cast(np.stack(data_batch), dtype=tf.float32)
+        return data_batch
+
+    def preprocess_label_batch(self, label_batch: Iterable):
+        label_batch = tf.cast(np.stack(label_batch), dtype=tf.float32)
+        return label_batch
 
     def __getitem__(self, item: int):
         if self.batch_size * (item + 1) >= len(self.patients):
@@ -77,7 +80,7 @@ class MRIDataLoader(tf.keras.utils.Sequence):
 
             label_batch.append(one_hot(self.metadata[self.metadata["name"] == patient]["label"].iloc[0], n=len(self.metadata["label"].unique())))
 
-        data_batch = preprocess_data_batch(data_batch)
-        label_batch = preprocess_label_batch(label_batch)
+        data_batch = self.preprocess_data_batch(data_batch)
+        label_batch = self.preprocess_label_batch(label_batch)
 
         return data_batch, label_batch

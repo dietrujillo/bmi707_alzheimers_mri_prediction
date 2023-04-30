@@ -9,11 +9,6 @@ def augmentation_pipeline(images: tf.Tensor,
                           randomZoom: bool = False,
                           filtering: bool = False) -> tf.Tensor:
 
-
-    plt.imshow(images[0], cmap='gray', vmin=0, vmax=255)
-    plt.savefig("before.png")
-    plt.show()
-
     if randomRotation:
         images = tf.keras.layers.RandomRotation(factor=0.05)(images)
 
@@ -26,10 +21,7 @@ def augmentation_pipeline(images: tf.Tensor,
     if filtering:
         for channel in range(images.shape[-1]):
             images[:, :, :, channel] = _anisotropicFiltering2D(images[:, :, :, channel])
-
-    plt.imshow(images[0], cmap='gray', vmin=0, vmax=255)
-    plt.savefig("after.png")
-    plt.show()
+            
     return images
 
 def _anisotropicFiltering2D(img,

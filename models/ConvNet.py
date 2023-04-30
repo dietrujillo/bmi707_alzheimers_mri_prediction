@@ -9,7 +9,7 @@ class ConvBlock(tf.keras.layers.Layer):
     def __init__(self, filters: int, kernel_size: tuple[int, int],
                  use_batch_norm: bool = True,
                  pool_size: tuple[int, int] = None,
-                 activation: Union[tf.keras.layers.Activation, str] = tf.keras.activations.relu,
+                 activation: Union[tf.keras.layers.Activation, str] = "gelu",
                  name: str = "", **kwargs):
         super(ConvBlock, self).__init__(name=name, **kwargs)
         

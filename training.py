@@ -56,7 +56,7 @@ def train(namespace: Namespace) -> None:
                                             stratify=y_test, random_state=namespace.random_seed)
     
     loader = MRIDataLoader(data_path=os.path.join(namespace.data_path, "preprocessed"), metadata_path=os.path.join(namespace.data_path, "metadata.csv"),
-                           patients=X_train, batch_size=namespace.batch_size, verbose=False, augment_data=True)
+                           patients=X_train, batch_size=namespace.batch_size, verbose=False, augment_data=False)
     validation_loader = MRIDataLoader(data_path=os.path.join(namespace.data_path, "preprocessed"), metadata_path=os.path.join(namespace.data_path, "metadata.csv"),
                                       patients=X_val, shuffle_all=False, shuffle_batch=False, batch_size=namespace.batch_size, verbose=False, augment_data=False)
     test_loader = MRIDataLoader(data_path=os.path.join(namespace.data_path, "preprocessed"), metadata_path=os.path.join(namespace.data_path, "metadata.csv"),

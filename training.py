@@ -55,14 +55,12 @@ def train(namespace: Namespace) -> None:
     X_val, X_test, y_val, y_test = train_test_split(X_test, y_test, test_size=0.33,
                                             stratify=y_test, random_state=namespace.random_seed)
     
-    print(len(X_train), len(X_val), len(X_test))
-
     loader = MRIDataLoader(data_path=os.path.join(namespace.data_path, "preprocessed"), metadata_path=os.path.join(namespace.data_path, "metadata.csv"),
-                           patients=X_train, batch_size=256, verbose=False, augment_data=True)
+                           patients=X_train, batch_size=namespace.batch_size, verbose=False, augment_data=True)
     validation_loader = MRIDataLoader(data_path=os.path.join(namespace.data_path, "preprocessed"), metadata_path=os.path.join(namespace.data_path, "metadata.csv"),
-                                      patients=X_val, shuffle_all=False, shuffle_batch=False, batch_size=256, verbose=False, augment_data=False)
+                                      patients=X_val, shuffle_all=False, shuffle_batch=False, batch_size=namespace.batch_size, verbose=False, augment_data=False)
     test_loader = MRIDataLoader(data_path=os.path.join(namespace.data_path, "preprocessed"), metadata_path=os.path.join(namespace.data_path, "metadata.csv"),
-                                      patients=X_test, shuffle_all=False, shuffle_batch=False, batch_size=256, verbose=False, augment_data=False)
+                                      patients=X_test, shuffle_all=False, shuffle_batch=False, batch_size=namespace.batch_size, verbose=False, augment_data=False)
 
     history = model.fit(loader, validation_data=validation_loader, epochs=namespace.epochs, callbacks=callbacks)
 

@@ -1,9 +1,10 @@
 import argparse
 import datetime
 
-from training import train
+from tensorflow.python.ops.numpy_ops import np_config
 
 from models.models import MODELS
+from training import train
 
 
 def parse_args(args: list[str] = None) -> argparse.Namespace:
@@ -20,6 +21,7 @@ def parse_args(args: list[str] = None) -> argparse.Namespace:
     parser.add_argument("--epochs", type=int, default=10, help="Number of epochs to train for.")
     parser.add_argument("--early-stopping-patience", type=int, default=5, help="Patience of the EarlyStopping callback.")
     
+    parser.add_argument("--batch-size", type=int, default=256, help="Batch size")
 
     parser.add_argument("--training-id", type=str, default=None,
                         help="ID for the training run. Ignored if mode != 'train'. "
@@ -34,4 +36,5 @@ def parse_args(args: list[str] = None) -> argparse.Namespace:
 
 if __name__ == '__main__':
     namespace = parse_args()
+    np_config.enable_numpy_behavior()
     train(namespace)

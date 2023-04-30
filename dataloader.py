@@ -5,7 +5,7 @@ import imageio
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-from Preprocessor import Preprocesser
+from augmentation import augmentation_pipeline
 
 def one_hot(item: int, n: int):
     ret = np.zeros(n)
@@ -25,7 +25,6 @@ class MRIDataLoader(tf.keras.utils.Sequence):
                  augment_data: bool = False):
         super(MRIDataLoader, self).__init__()
 
-        self.Preprocessor = Preprocesser()
         self.data_path = data_path
         self.metadata_path = metadata_path
         self.verbose = verbose
@@ -49,17 +48,9 @@ class MRIDataLoader(tf.keras.utils.Sequence):
         return int(np.ceil(len(self.patients) / self.batch_size))
     
     def preprocess_data_batch(self, data_batch: Iterable):
-        # TODO: add data preprocessing and augmentations (random flips, rotations, zoom, affine transforms, etc.)
+        data_batch = tf.cast(np.stack(data_batch), dtype=tf.float32)
         if self.augment_data:
-            data_batch = self.Preprocessor.preprocessPipeline(images=data_batch,
-                                                              basicProcessing=True,
-                                                              randomRotation=True,
-                                                              randomFlip=True,
-                                                              randomZoom=True,
-                                                              randomShear=True,
-                                                              filtering=True)
-
-        #data_batch = tf.cast(np.stack(data_batch), dtype=tf.float32)
+            data_batch = augmentation_pipeline(images=data_batch)
         return data_batch
 
     def preprocess_label_batch(self, label_batch: Iterable):
@@ -82,7 +73,7 @@ class MRIDataLoader(tf.keras.utils.Sequence):
                 print(f"Loading patient {patient}.")
             patient_dir = os.path.join(self.data_path, patient)
             try:
-                data_batch.append(imageio.imread(patient_dir, pilmode="RGB"))
+                data_batch.append(imageio.imread(patient_dir, pilmode="RGB"))                
             except FileNotFoundError as e:
                 if self.verbose:
                     print(f"Missing file for patient {patient}: {e.filename}")

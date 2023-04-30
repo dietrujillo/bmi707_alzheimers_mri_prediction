@@ -5,6 +5,7 @@ import imageio
 import numpy as np
 import pandas as pd
 import tensorflow as tf
+from Preprocessor import Preprocesser
 
 def one_hot(item: int, n: int):
     ret = np.zeros(n)
@@ -24,6 +25,7 @@ class MRIDataLoader(tf.keras.utils.Sequence):
                  augment_data: bool = False):
         super(MRIDataLoader, self).__init__()
 
+        self.Preprocessor = Preprocesser()
         self.data_path = data_path
         self.metadata_path = metadata_path
         self.verbose = verbose
@@ -49,8 +51,15 @@ class MRIDataLoader(tf.keras.utils.Sequence):
     def preprocess_data_batch(self, data_batch: Iterable):
         # TODO: add data preprocessing and augmentations (random flips, rotations, zoom, affine transforms, etc.)
         if self.augment_data:
-            pass
-        data_batch = tf.cast(np.stack(data_batch), dtype=tf.float32)
+            data_batch = self.Preprocessor.preprocessPipeline(images=data_batch,
+                                                              basicProcessing=True,
+                                                              randomRotation=True,
+                                                              randomFlip=True,
+                                                              randomZoom=True,
+                                                              randomShear=True,
+                                                              filtering=True)
+
+        #data_batch = tf.cast(np.stack(data_batch), dtype=tf.float32)
         return data_batch
 
     def preprocess_label_batch(self, label_batch: Iterable):
@@ -84,3 +93,5 @@ class MRIDataLoader(tf.keras.utils.Sequence):
         label_batch = self.preprocess_label_batch(label_batch)
 
         return data_batch, label_batch
+    
+    
